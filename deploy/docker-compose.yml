@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: VoiceFlow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: voicechat
+      POSTGRES_PASSWORD: voicechat123
+      POSTGRES_DB: voicechat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - voicechat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voicechat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Pub/Sub
+  redis:
+    image: redis:7-alpine
+    container_name: VoiceFlow-redis
+    restart: unless-stopped
+    command: redis-server --requirepass voicechat456
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - voicechat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (S3-compatible storage for recordings)
+  minio:
+    image: minio/minio:latest
+    container_name: VoiceFlow-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: voicechat
+      MINIO_ROOT_PASSWORD: voicechat789
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - voicechat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Create MinIO bucket
+  minio-init:
+    image: minio/mc:latest
+    container_name: VoiceFlow-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set myminio http://minio:9000 voicechat voicechat789;
+      mc mb -p myminio/voicechat-recordings;
+      exit 0;
+      "
+    networks:
+      - voicechat-network
+
+networks:
+  voicechat-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

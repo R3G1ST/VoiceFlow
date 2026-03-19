@@ -1,0 +1,404 @@
+// Prisma Schema for Discord Clone
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  username          String    @unique
+  password          String
+  discriminator     String    @default("0001")
+  avatar            String?
+  banner            String?
+  bio               String?
+  emailVerified     Boolean   @default(false)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  status            UserStatus @default(ONLINE)
+  customStatus      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastSeenAt        DateTime?
+
+  // Отношения
+  servers           ServerMember[]
+  channels          Channel[]
+  messages          Message[]
+  reactions         Reaction[]
+  friendships       Friendship[]
+  friendshipsTo     Friendship[] @relation("UserTo")
+  dms               DMChannel[]
+  dmsTo             DMChannel[] @relation("DMChannelTo")
+  calls             Call[]
+  callsTo           Call[] @relation("CallTo")
+  ownedServers      Server[]
+  ownedChannels     Channel[]
+  invites           Invite[]
+  auditLogs         AuditLog[]
+  roles             Role[]
+  roleMembers       ServerMember[]
+
+  @@index([email])
+  @@index([username])
+}
+
+enum UserStatus {
+  ONLINE
+  IDLE
+  DND
+  INVISIBLE
+  OFFLINE
+}
+
+// Серверы
+model Server {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String?
+  banner      String?
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Отношения
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     ServerMember[]
+  channels    Channel[]
+  roles       Role[]
+  invites     Invite[]
+  auditLogs   AuditLog[]
+  bans        Ban[]
+
+  @@index([ownerId])
+}
+
+// Участники сервера
+model ServerMember {
+  id        String   @id @default(uuid())
+  serverId  String
+  userId    String
+  nickname  String?
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Отношения
+  server  Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roles   Role[]
+  messages Message[]
+
+  @@unique([serverId, userId])
+  @@index([serverId])
+  @@index([userId])
+}
+
+// Каналы
+model Channel {
+  id         String      @id @default(uuid())
+  name       String
+  type       ChannelType @default(TEXT)
+  topic      String?
+  position   Int         @default(0)
+  parentId   String?
+  serverId   String?
+  ownerId    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  // Отношения
+  parent     Channel?    @relation("ChannelHierarchy", fields: [parentId], references: [id])
+  children   Channel[]   @relation("ChannelHierarchy")
+  server     Server?     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  owner      User?       @relation(fields: [ownerId], references: [id])
+  messages   Message[]
+  voiceStates VoiceState[]
+
+  @@index([serverId])
+  @@index([parentId])
+}
+
+enum ChannelType {
+  TEXT
+  VOICE
+  CATEGORY
+  DM
+  GROUP_DM
+  ANNOUNCEMENT
+  STAGE
+  FORUM
+}
+
+// Сообщения
+model Message {
+  id         String   @id @default(uuid())
+  content    String
+  channelId  String
+  authorId   String
+  memberId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  editedAt   DateTime?
+  deletedAt  DateTime?
+  type       MessageType @default(DEFAULT)
+  attachments Json?
+  embeds     Json?
+
+  // Отношения
+  channel  Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id])
+  member   ServerMember? @relation(fields: [memberId], references: [id])
+  reactions Reaction[]
+  mentions User[]   @relation("MessageMentions")
+  replyToId String?
+  replyTo  Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies  Message[] @relation("MessageReplies")
+
+  @@index([channelId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+enum MessageType {
+  DEFAULT
+  RECIPIENT_ADD
+  RECIPIENT_REMOVE
+  CALL
+  CHANNEL_NAME_CHANGE
+  CHANNEL_ICON_CHANGE
+  PINNED_MESSAGE
+  CHANNEL_FOLLOW_ADD
+  GUILD_BOOST
+  GUILD_BOOST_TIER_1
+  GUILD_BOOST_TIER_2
+  GUILD_BOOST_TIER_3
+}
+
+// Реакции
+model Reaction {
+  id        String @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  // Отношения
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+// Роли
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  color       String   @default("#000000")
+  position    Int      @default(0)
+  permissions BigInt   @default(0)
+  hoist       Boolean  @default(false)
+  mentionable Boolean  @default(false)
+  managed     Boolean  @default(false)
+  serverId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Отношения
+  server  Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  members ServerMember[]
+
+  @@index([serverId])
+}
+
+// Друзья
+model Friendship {
+  id        String         @id @default(uuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Отношения
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("UserTo", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+// Личные сообщения (DM)
+model DMChannel {
+  id        String   @id @default(uuid())
+  userId    String
+  recipientId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Отношения
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipient User     @relation("DMChannelTo", fields: [recipientId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([userId, recipientId])
+  @@index([userId])
+  @@index([recipientId])
+}
+
+// Приглашения
+model Invite {
+  code         String   @id
+  serverId     String
+  channelId    String
+  inviterId    String
+  maxAge       Int      @default(86400)
+  maxUses      Int      @default(0)
+  uses         Int      @default(0)
+  temporary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime?
+
+  // Отношения
+  server  Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  inviter User   @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([serverId])
+  @@index([inviterId])
+}
+
+// Состояния голоса
+model VoiceState {
+  id        String   @id @default(uuid())
+  userId    String
+  channelId String
+  serverId  String
+  sessionId String   @unique
+  deaf      Boolean  @default(false)
+  mute      Boolean  @default(false)
+  selfDeaf  Boolean  @default(false)
+  selfMute  Boolean  @default(false)
+  selfVideo Boolean  @default(false)
+  suppress  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  // Отношения
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([userId])
+  @@index([serverId])
+}
+
+// Звонки
+model Call {
+  id         String   @id @default(uuid())
+  channelId  String?
+  serverId   String?
+  startedAt  DateTime @default(now())
+  endedAt    DateTime?
+  region     String?
+
+  // Отношения
+  channel    Channel? @relation(fields: [channelId], references: [id])
+  participants CallParticipant[]
+
+  @@index([channelId])
+  @@index([serverId])
+}
+
+model CallParticipant {
+  id        String   @id @default(uuid())
+  callId    String
+  userId    String
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  video     Boolean  @default(false)
+  screen    Boolean  @default(false)
+
+  // Отношения
+  call  Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
+  @@index([userId])
+}
+
+// Баны
+model Ban {
+  id        String   @id @default(uuid())
+  serverId  String
+  userId    String
+  reason    String?
+  bannerId  String
+  createdAt DateTime @default(now())
+
+  // Отношения
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  banner User   @relation(fields: [bannerId], references: [id])
+
+  @@unique([serverId, userId])
+  @@index([serverId])
+  @@index([userId])
+}
+
+// Аудит лог
+model AuditLog {
+  id        String   @id @default(uuid())
+  serverId  String
+  userId    String
+  action    AuditAction
+  targetId  String?
+  targetType String?
+  reason    String?
+  changes   Json?
+  createdAt DateTime @default(now())
+
+  // Отношения
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([serverId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum AuditAction {
+  GUILD_CREATE
+  GUILD_UPDATE
+  GUILD_DELETE
+  CHANNEL_CREATE
+  CHANNEL_UPDATE
+  CHANNEL_DELETE
+  ROLE_CREATE
+  ROLE_UPDATE
+  ROLE_DELETE
+  MEMBER_KICK
+  MEMBER_BAN_ADD
+  MEMBER_BAN_REMOVE
+  MEMBER_UPDATE
+  MEMBER_ROLE_UPDATE
+  MESSAGE_DELETE
+  MESSAGE_BULK_DELETE
+  INVITE_CREATE
+  INVITE_DELETE
+  WEBHOOK_CREATE
+  WEBHOOK_UPDATE
+  WEBHOOK_DELETE
+}
