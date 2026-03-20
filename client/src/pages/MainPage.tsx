@@ -5,18 +5,30 @@ import api from '../services/api';
 export default function MainPage() {
   const { user, logout } = useAuthStore();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
+    console.log('🔍 Checking auth, user:', user?.username);
+    
     try {
-      await api.get('/users/me');
+      const response = await api.get('/users/me');
+      console.log('✅ Auth check successful:', response.data);
       setLoading(false);
-    } catch (error) {
-      logout();
+    } catch (err: any) {
+      console.error('❌ Auth check failed:', err.response?.status, err.message);
+      setError(err.response?.data?.message || 'Ошибка авторизации');
+      setLoading(false);
+      // Не делаем logout сразу - даём пользователю увидеть ошибку
     }
+  };
+
+  const handleLogout = () => {
+    console.log('🚪 Logging out...');
+    logout();
   };
 
   if (loading) {
@@ -40,6 +52,12 @@ export default function MainPage() {
           Вы вошли как {user?.username}#{user?.discriminator}
         </p>
         
+        {error && (
+          <div className="bg-danger/20 text-danger text-sm p-3 rounded mb-4">
+            ⚠️ {error}
+          </div>
+        )}
+        
         <div className="space-y-4">
           <div className="bg-primary-200 p-6 rounded-lg">
             <h2 className="text-xl font-semibold text-white mb-2">
@@ -52,7 +70,7 @@ export default function MainPage() {
 
           <div className="flex gap-4 justify-center">
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="btn-discord-secondary"
             >
               Выйти

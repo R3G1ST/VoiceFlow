@@ -18,14 +18,29 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    console.log('📝 Login attempt:', formData.email);
+
     try {
       const response = await api.post('/auth/login', formData);
       const { user, accessToken, refreshToken } = response.data;
 
+      console.log('✅ Login successful:', user.username);
+      console.log('🔑 Token received:', accessToken ? 'YES' : 'NO');
+
+      // Сохраняем в store и localStorage
       setAuth(user, accessToken, refreshToken);
-      navigate('/');
+
+      console.log('🔄 Navigating to home...');
+      
+      // Небольшая задержка чтобы убедиться что токен сохранился
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
+      
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка входа');
+      console.error('❌ Login error:', err);
+      const message = err.response?.data?.message || err.message || 'Ошибка входа';
+      setError(message);
     } finally {
       setLoading(false);
     }
