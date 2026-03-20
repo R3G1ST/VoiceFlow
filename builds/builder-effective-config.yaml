@@ -1,7 +1,7 @@
 directories:
   output: ../builds
   buildResources: build
-appId: com.voicechat.app
+appId: com.voiceflow.app
 productName: VoiceFlow
 files:
   - filter:

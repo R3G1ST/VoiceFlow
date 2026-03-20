@@ -7,7 +7,7 @@ export default function MemberList() {
     return null;
   }
 
-  const members = currentServer.members || [];
+  const members: any[] = (currentServer as any).members || [];
 
   return (
     <div className="w-60 bg-primary-200 flex flex-col overflow-y-auto">
