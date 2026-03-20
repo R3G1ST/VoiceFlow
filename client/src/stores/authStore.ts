@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface User {
   id: string;
@@ -21,34 +20,62 @@ interface AuthState {
   updateUser: (user: Partial<User>) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  accessToken: null,
+  refreshToken: null,
+  isAuthenticated: false,
+  setAuth: (user, accessToken, refreshToken) => {
+    // Сохраняем в localStorage для сохранения сессии
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    set({
+      user,
+      accessToken,
+      refreshToken,
+      isAuthenticated: true,
+    });
+  },
+  logout: () => {
+    // Очищаем localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    
+    set({
       user: null,
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      setAuth: (user, accessToken, refreshToken) =>
-        set({
-          user,
-          accessToken,
-          refreshToken,
-          isAuthenticated: true,
-        }),
-      logout: () =>
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        }),
-      updateUser: (userData) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, ...userData } : null,
-        })),
+    });
+  },
+  updateUser: (userData) =>
+    set((state) => {
+      const newUser = state.user ? { ...state.user, ...userData } : null;
+      if (newUser) {
+        localStorage.setItem('user', JSON.stringify(newUser));
+      }
+      return { user: newUser };
     }),
-    {
-      name: 'voiceflow-auth',
+}));
+
+// Восстанавливаем сессию при загрузке
+if (typeof window !== 'undefined') {
+  const token = localStorage.getItem('accessToken');
+  const userStr = localStorage.getItem('user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      useAuthStore.getState().setAuth(
+        user,
+        token,
+        localStorage.getItem('refreshToken') || ''
+      );
+    } catch (e) {
+      localStorage.removeItem('user');
     }
-  )
-);
+  }
+}
