@@ -1,4 +1,4 @@
-import { useServerStore } from '../../stores/serverStore';
+import { useServerStore } from '../stores/serverStore';
 import { Plus } from 'lucide-react';
 
 interface ServerListProps {
@@ -30,7 +30,7 @@ export default function ServerList({ onOpenCreateServer }: ServerListProps) {
       <div className="w-8 h-[2px] bg-secondary-500 rounded-lg mx-auto" />
 
       {/* Servers */}
-      {servers.map((server) => (
+      {servers.map((server: any) => (
         <div key={server.id} className="relative group">
           <div
             className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 bg-white rounded-r-full transition-all duration-200 ${

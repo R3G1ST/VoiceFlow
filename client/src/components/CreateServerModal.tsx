@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { useAuthStore } from '../../stores/authStore';
-import { useServerStore } from '../../stores/serverStore';
-import api from '../../services/api';
+import { useServerStore } from '../stores/serverStore';
+import api from '../services/api';
 
 interface CreateServerModalProps {
   onClose: () => void;
 }
 
 export default function CreateServerModal({ onClose }: CreateServerModalProps) {
-  const { user } = useAuthStore();
   const { addServer } = useServerStore();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,5 @@
-import { useServerStore } from '../../stores/serverStore';
-import { useAuthStore } from '../../stores/authStore';
+import { useServerStore } from '../stores/serverStore';
+import { useAuthStore } from '../stores/authStore';
 import { Hash, Mic, Plus, Settings } from 'lucide-react';
 
 export default function ChannelSidebar() {
@@ -16,8 +16,8 @@ export default function ChannelSidebar() {
     );
   }
 
-  const textChannels = currentServer.channels?.filter((c) => c.type === 'TEXT') || [];
-  const voiceChannels = currentServer.channels?.filter((c) => c.type === 'VOICE') || [];
+  const textChannels = currentServer.channels?.filter((c: any) => c.type === 'TEXT') || [];
+  const voiceChannels = currentServer.channels?.filter((c: any) => c.type === 'VOICE') || [];
 
   return (
     <div className="w-60 bg-primary-200 flex flex-col">
@@ -37,7 +37,7 @@ export default function ChannelSidebar() {
             </span>
             <Plus className="w-4 h-4 text-secondary-200 hover:text-white cursor-pointer" />
           </div>
-          {textChannels.map((channel) => (
+          {textChannels.map((channel: any) => (
             <div
               key={channel.id}
               onClick={() => setCurrentChannel(channel)}
@@ -64,7 +64,7 @@ export default function ChannelSidebar() {
             </span>
             <Plus className="w-4 h-4 text-secondary-200 hover:text-white cursor-pointer" />
           </div>
-          {voiceChannels.map((channel) => (
+          {voiceChannels.map((channel: any) => (
             <div
               key={channel.id}
               onClick={() => setCurrentChannel(channel)}

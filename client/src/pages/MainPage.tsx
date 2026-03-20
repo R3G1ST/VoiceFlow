@@ -12,10 +12,9 @@ import CreateServerModal from '../components/CreateServerModal';
 
 export default function MainPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
-  const { servers, currentServer, loadServers } = useServerStore();
+  const { logout } = useAuthStore();
+  const { loadServers } = useServerStore();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [showCreateServer, setShowCreateServer] = useState(false);
 
   useEffect(() => {
@@ -29,14 +28,8 @@ export default function MainPage() {
       setLoading(false);
     } catch (err: any) {
       console.error('Auth check failed:', err);
-      setError('Ошибка авторизации');
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
   };
 
   if (loading) {
@@ -52,22 +45,11 @@ export default function MainPage() {
 
   return (
     <div className="h-screen w-screen flex overflow-hidden">
-      {/* Список серверов */}
       <ServerList onOpenCreateServer={() => setShowCreateServer(true)} />
-
-      {/* Боковая панель с каналами */}
       <ChannelSidebar />
-
-      {/* Основная область чата */}
       <ChatArea />
-
-      {/* Список участников */}
       <MemberList />
-
-      {/* Голосовая панель */}
       <VoicePanel />
-
-      {/* Модальное окно создания сервера */}
       {showCreateServer && (
         <CreateServerModal onClose={() => setShowCreateServer(false)} />
       )}

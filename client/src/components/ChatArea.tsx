@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { useServerStore } from '../../stores/serverStore';
-import { Hash, Gift, Smile, Plus, Search, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { useServerStore } from '../stores/serverStore';
+import { Hash, Plus, Search, Phone } from 'lucide-react';
 
 export default function ChatArea() {
   const { currentChannel } = useServerStore();
   const [inputValue, setInputValue] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
 
   if (!currentChannel) {
     return (
@@ -48,7 +47,6 @@ export default function ChatArea() {
       {/* Message Input */}
       <div className="px-4 pb-6">
         <div className="flex items-center gap-3 bg-primary-200 rounded-lg px-4 py-2.5">
-          <Plus className="w-6 h-6 text-secondary-200 hover:text-white cursor-pointer" />
           <input
             type="text"
             value={inputValue}
@@ -56,8 +54,6 @@ export default function ChatArea() {
             className="flex-1 bg-transparent text-white focus:outline-none"
             placeholder={`Написать сообщение в #${currentChannel.name}`}
           />
-          <Gift className="w-6 h-6 text-secondary-200 hover:text-white cursor-pointer" />
-          <Smile className="w-6 h-6 text-secondary-200 hover:text-white cursor-pointer" />
         </div>
       </div>
     </div>
