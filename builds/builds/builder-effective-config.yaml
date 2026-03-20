@@ -1,0 +1,17 @@
+directories:
+  output: ../builds
+  buildResources: build
+appId: com.voiceflow.app
+productName: VoiceFlow
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+portable:
+  artifactName: VoiceFlow Portable.exe
+electronVersion: 28.3.3
