@@ -1,4 +1,3 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from './stores/authStore';
 import LoadingScreen from './components/LoadingScreen';
@@ -6,43 +5,65 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MainPage from './pages/MainPage';
 import api from './services/api';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [currentRoute, setCurrentRoute] = useState('/');
+
+  console.log('🔍 App render:', { isAuthenticated, isLoading, currentRoute });
 
   useEffect(() => {
+    console.log('⚡ App mounted, checking server...');
     checkServerConnection();
   }, []);
 
   const checkServerConnection = async () => {
+    console.log('🔗 Checking server connection...');
     try {
-      await api.get('/auth/login', {
-        timeout: 3000,
+      const response = await api.get('/auth/login', {
+        timeout: 5000,
         validateStatus: (status) => status < 500
       });
+      console.log('✅ Server response:', response.status);
       setConnectionError(null);
-      console.log('✅ Сервер подключен');
     } catch (error: any) {
-      console.error('❌ Ошибка подключения к серверу:', error);
-      setConnectionError('Сервер недоступен. Попробуйте позже.');
+      console.error('❌ Server connection error:', error.message);
+      setConnectionError(`Сервер недоступен: ${error.message}`);
     } finally {
       setTimeout(() => {
+        console.log('⏳ Loading complete, showing UI');
         setIsLoading(false);
-      }, 1500);
+      }, 2000);
     }
   };
 
   const handleRetry = () => {
+    console.log('🔄 Retry clicked');
     setIsLoading(true);
     setConnectionError(null);
     checkServerConnection();
   };
 
+  // Показываем отладочную информацию
   if (isLoading) {
-    return <LoadingScreen onRetry={handleRetry} error={connectionError} />;
+    console.log('⏳ Showing loading screen');
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-primary-100">
+        <div className="text-center">
+          <LoadingScreen onRetry={handleRetry} error={connectionError} />
+          <p className="text-white mt-4">Загрузка приложения...</p>
+          <p className="text-secondary-400 text-sm mt-2">
+            {connectionError ? 'Ошибка подключения' : 'Подключение к серверу'}
+          </p>
+        </div>
+      </div>
+    );
   }
+
+  console.log('✅ Rendering routes:', { isAuthenticated });
 
   return (
     <BrowserRouter>
