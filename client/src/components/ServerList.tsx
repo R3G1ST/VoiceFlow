@@ -3,22 +3,30 @@ import { Plus } from 'lucide-react';
 
 interface ServerListProps {
   onOpenCreateServer: () => void;
+  onServerClick?: (server: any) => void;
 }
 
-export default function ServerList({ onOpenCreateServer }: ServerListProps) {
+export default function ServerList({ onOpenCreateServer, onServerClick }: ServerListProps) {
   const { servers, currentServer, setCurrentServer } = useServerStore();
 
   const handleHomeClick = () => {
     setCurrentServer(null);
   };
 
+  const handleServerClick = (server: any) => {
+    setCurrentServer(server);
+    if (onServerClick) {
+      onServerClick(server);
+    }
+  };
+
   return (
-    <div className="w-[72px] bg-primary-200 flex flex-col items-center py-3 gap-2 overflow-y-auto">
+    <div className="w-[72px] bg-[#1e1f22] flex flex-col items-center py-3 gap-2 overflow-y-auto">
       {/* Home/Direct Messages */}
       <div
         onClick={handleHomeClick}
-        className={`w-12 h-12 rounded-full bg-secondary-500 hover:rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-primary-500 hover:text-white text-secondary-100 ${
-          !currentServer ? 'rounded-xl bg-primary-500 text-white' : ''
+        className={`w-12 h-12 rounded-[24px] bg-[#313338] hover:rounded-[16px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-[#5865f2] hover:text-white text-[#dbdee1] ${
+          !currentServer ? 'rounded-[16px] bg-[#5865f2] text-white' : ''
         }`}
         title="Личные сообщения"
       >
@@ -27,7 +35,7 @@ export default function ServerList({ onOpenCreateServer }: ServerListProps) {
         </svg>
       </div>
 
-      <div className="w-8 h-[2px] bg-secondary-500 rounded-lg mx-auto" />
+      <div className="w-8 h-[2px] bg-[#35363c] rounded-lg mx-auto" />
 
       {/* Servers */}
       {servers.map((server: any) => (
@@ -40,14 +48,14 @@ export default function ServerList({ onOpenCreateServer }: ServerListProps) {
             }`}
           />
           <div
-            onClick={() => setCurrentServer(server)}
-            className={`w-12 h-12 rounded-full bg-secondary-500 hover:rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-primary-500 hover:text-white text-secondary-100 ${
-              currentServer?.id === server.id ? 'rounded-xl bg-primary-500 text-white' : ''
+            onClick={() => handleServerClick(server)}
+            className={`w-12 h-12 rounded-[24px] bg-[#313338] hover:rounded-[16px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-[#5865f2] hover:text-white text-[#dbdee1] ${
+              currentServer?.id === server.id ? 'rounded-[16px] bg-[#5865f2] text-white' : ''
             }`}
             title={server.name}
           >
             {server.icon ? (
-              <img src={server.icon} alt={server.name} className="w-full h-full object-cover rounded-full" />
+              <img src={server.icon} alt={server.name} className="w-full h-full object-cover rounded-[24px] group-hover:rounded-[16px] transition-all duration-200" />
             ) : (
               <span className="text-sm font-medium">
                 {server.name.substring(0, 2).toUpperCase()}
@@ -60,7 +68,7 @@ export default function ServerList({ onOpenCreateServer }: ServerListProps) {
       {/* Add Server Button */}
       <div
         onClick={onOpenCreateServer}
-        className="w-12 h-12 rounded-full bg-secondary-500 hover:rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-success text-success hover:text-white"
+        className="w-12 h-12 rounded-[24px] bg-[#313338] hover:rounded-[16px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:bg-[#23a559] text-[#23a559] hover:text-white group"
         title="Создать сервер"
       >
         <Plus className="w-6 h-6" />

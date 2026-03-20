@@ -1,39 +1,54 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const url = require('url');
+const fs = require('fs');
 
 let mainWindow;
 
 function createWindow() {
-  console.log('🚀 Creating window...');
-  
+  console.log('🚀 Creating Electron window...');
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
     frame: true,
-    backgroundColor: '#1a1b1e',
+    backgroundColor: '#36393f',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    icon: path.join(__dirname, '../dist/icon.svg'),
+    // Показываем окно сразу
+    show: true,
   });
 
   // Открываем DevTools для отладки
   mainWindow.webContents.openDevTools();
 
-  const isDev = process.env.VITE_DEV_SERVER_URL;
+  console.log('📁 Loading from:', __dirname);
 
+  // В режиме разработки загружаем с Vite сервера
+  // Проверяем запущен ли Vite dev сервер (порт 5173)
+  const isDev = process.env.NODE_ENV === 'development' || process.env.DEV === 'true';
+  
   if (isDev) {
-    console.log('🌐 Loading from dev server:', process.env.VITE_DEV_SERVER_URL);
-    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    console.log('🌐 Development mode - loading from Vite dev server (http://localhost:5173)');
+    mainWindow.loadURL('http://localhost:5173');
   } else {
+    // Загружаем index.html из dist папки
     const indexPath = path.join(__dirname, '../dist/index.html');
-    console.log('📁 Loading from file:', indexPath);
-    mainWindow.loadFile(indexPath);
+    console.log('📄 Loading file:', indexPath);
+    
+    if (fs.existsSync(indexPath)) {
+      console.log('✅ File exists, loading...');
+      mainWindow.loadFile(indexPath);
+    } else {
+      console.error('❌ File NOT found:', indexPath);
+      console.log('🌐 Trying to load from server...');
+      mainWindow.loadURL('http://77.105.133.95:5173');
+    }
   }
 
   mainWindow.on('closed', () => {
@@ -42,7 +57,7 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
-    console.log('✅ Page loaded');
+    console.log('✅ Page loaded successfully');
   });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -68,6 +83,7 @@ app.on('window-all-closed', () => {
   }
 });
 
+// IPC handlers
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });

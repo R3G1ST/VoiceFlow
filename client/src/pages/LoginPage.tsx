@@ -19,26 +19,51 @@ export default function LoginPage() {
     setLoading(true);
 
     console.log('📝 Login attempt:', formData.email);
+    console.log('🔐 Auth state before login:', { isAuthenticated: useAuthStore.getState().isAuthenticated });
 
     try {
       const response = await api.post('/auth/login', formData);
+      console.log('📦 Full response data:', response.data);
+      
       const { user, accessToken, refreshToken } = response.data;
+      
+      console.log('✅ Login response:', { 
+        hasUser: !!user, 
+        hasAccessToken: !!accessToken, 
+        hasRefreshToken: !!refreshToken,
+        user: user
+      });
 
-      console.log('✅ Login successful:', user.username);
+      if (!user || !accessToken) {
+        throw new Error('Сервер вернул некорректные данные');
+      }
+
       console.log('🔑 Token received:', accessToken ? 'YES' : 'NO');
 
       // Сохраняем в store и localStorage
       setAuth(user, accessToken, refreshToken);
+      
+      // Проверяем что сохранилось
+      const stateAfter = useAuthStore.getState();
+      console.log('🔍 Auth state after setAuth:', { 
+        isAuthenticated: stateAfter.isAuthenticated,
+        hasToken: !!stateAfter.accessToken,
+        hasUser: !!stateAfter.user,
+        user: stateAfter.user
+      });
 
       console.log('🔄 Navigating to home...');
-      
+
       // Небольшая задержка чтобы убедиться что токен сохранился
       setTimeout(() => {
+        console.log('⏰ Timeout complete, navigating...');
+        console.log('🔍 Current auth state:', useAuthStore.getState().isAuthenticated);
         navigate('/');
-      }, 100);
-      
+      }, 500);
+
     } catch (err: any) {
       console.error('❌ Login error:', err);
+      console.error('❌ Error details:', err.response?.data);
       const message = err.response?.data?.message || err.message || 'Ошибка входа';
       setError(message);
     } finally {
@@ -47,7 +72,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('https://cdn.discordapp.com/attachments/886936827309326376/1128255164165505094/LOGIN_BACKGROUND_1920x1080.png')" }}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
       <div className="bg-primary-100 p-8 rounded-lg shadow-2xl w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">С возвращением!</h1>

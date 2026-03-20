@@ -22,21 +22,58 @@ body {
 
 /* Discord-like input styles */
 .input-discord {
-  @apply bg-primary-200 text-gray-100 rounded px-4 py-2.5 w-full;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
-  @apply transition-all duration-200;
+  background-color: #383a40;
+  color: #dbdee1;
+  border-radius: 4px;
+  padding: 10px 16px;
+  width: 100%;
+  border: 1px solid #1e1f22;
+  transition: border-color 0.2s;
+}
+
+.input-discord:focus {
+  outline: none;
+  border-color: #5865f2;
+}
+
+.input-discord::placeholder {
+  color: #949ba4;
 }
 
 /* Discord-like button styles */
 .btn-discord {
-  @apply bg-primary-500 text-white rounded px-4 py-2.5 font-medium;
-  @apply hover:bg-primary-600 transition-colors duration-200;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
+  background-color: #5865f2;
+  color: white;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-discord:hover {
+  background-color: #4752c4;
+}
+
+.btn-discord:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #5865f2;
 }
 
 .btn-discord-secondary {
-  @apply bg-secondary-500 text-white rounded px-4 py-2.5 font-medium;
-  @apply hover:bg-secondary-400 transition-colors duration-200;
+  background-color: #4e5058;
+  color: white;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-discord-secondary:hover {
+  background-color: #5e6068;
 }
 
 /* Loading screen */

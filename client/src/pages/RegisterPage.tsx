@@ -49,16 +49,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('https://cdn.discordapp.com/attachments/886936827309326376/1128255164165505094/LOGIN_BACKGROUND_1920x1080.png')" }}>
-      <div className="bg-primary-100 p-8 rounded-lg shadow-2xl w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+      <div className="bg-[#313338] p-8 rounded-lg shadow-2xl w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">Создать аккаунт</h1>
-          <p className="text-secondary-100">Мы так рады видеть вас здесь!</p>
+          <p className="text-[#b5bac1]">Мы так рады видеть вас здесь!</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-secondary-100 text-sm font-medium mb-2">
+            <label className="block text-[#b5bac1] text-sm font-medium mb-2">
               Email
             </label>
             <input
@@ -72,7 +72,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-secondary-100 text-sm font-medium mb-2">
+            <label className="block text-[#b5bac1] text-sm font-medium mb-2">
               Имя пользователя
             </label>
             <input
@@ -88,7 +88,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-secondary-100 text-sm font-medium mb-2">
+            <label className="block text-[#b5bac1] text-sm font-medium mb-2">
               Пароль
             </label>
             <input
@@ -103,7 +103,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-secondary-100 text-sm font-medium mb-2">
+            <label className="block text-[#b5bac1] text-sm font-medium mb-2">
               Подтверждение пароля
             </label>
             <input
@@ -117,7 +117,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="bg-danger/20 text-danger text-sm p-3 rounded">
+            <div className="bg-[#f23f43]/10 text-[#f23f43] text-sm p-3 rounded">
               {error}
             </div>
           )}
@@ -130,13 +130,13 @@ export default function RegisterPage() {
             {loading ? 'Регистрация...' : 'Продолжить'}
           </button>
 
-          <p className="text-xs text-secondary-200 text-center">
+          <p className="text-xs text-[#949ba4] text-center">
             Регистрируясь, вы соглашаетесь с нашими Условиями использования и Политикой конфиденциальности.
           </p>
         </form>
 
         <div className="mt-4 text-center">
-          <Link to="/login" className="text-primary-500 hover:underline text-sm">
+          <Link to="/login" className="text-[#00a8fc] hover:underline text-sm">
             Уже есть аккаунт? Войти
           </Link>
         </div>

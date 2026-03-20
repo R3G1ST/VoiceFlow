@@ -117,7 +117,7 @@ export class ChannelsService {
     const messages = await this.prisma.message.findMany({
       where: { channelId },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -130,6 +130,10 @@ export class ChannelsService {
       take: limit,
     });
 
-    return messages.reverse();
+    // Преобразуем user в author для совместимости с фронтендом
+    return messages.map(m => ({
+      ...m,
+      author: m.user,
+    }));
   }
 }

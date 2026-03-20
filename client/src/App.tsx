@@ -5,45 +5,87 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MainPage from './pages/MainPage';
 import api from './services/api';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+
+function AppRoutes() {
+  const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  console.log('🔍 AppRoutes render:', {
+    isAuthenticated,
+    currentPath: location.pathname,
+    navigate: !!navigate
+  });
+
+  // Принудительно перенаправляем на /login если нет аутентификации и мы на главной
+  useEffect(() => {
+    if (!isAuthenticated && location.pathname === '/') {
+      console.log('🔄 Redirecting to /login...');
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, location.pathname, navigate]);
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />}
+      />
+      <Route
+        path="/register"
+        element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" replace />}
+      />
+      <Route
+        path="/"
+        element={isAuthenticated ? <MainPage /> : <Navigate to="/login" replace />}
+      />
+    </Routes>
+  );
+}
 
 function App() {
   const { isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [currentRoute, setCurrentRoute] = useState('/');
+  const [startTime] = useState(Date.now());
 
-  console.log('🔍 App render:', { isAuthenticated, isLoading, currentRoute });
+  console.log('🔍 App render:', { isAuthenticated, isLoading });
 
   useEffect(() => {
     console.log('⚡ App mounted, checking server...');
+    console.log('🔍 Initial auth state:', { 
+      isAuthenticated,
+      hasToken: !!localStorage.getItem('accessToken'),
+      hasUser: !!localStorage.getItem('user')
+    });
     checkServerConnection();
   }, []);
 
   const checkServerConnection = async () => {
     console.log('🔗 Checking server connection...');
     try {
-<<<<<<< HEAD
-      const response = await api.get('/auth/login', {
-        timeout: 5000,
-        validateStatus: (status) => status < 500
-=======
-      // Проверяем доступность API через запрос к login (возвращает 400/401 но не 404)
-      await api.get('/auth/login', { 
+      // Проверяем доступность API через POST к register (вернёт 400 если всё ок)
+      await api.post('/auth/register', { email: '', username: '', password: '' }, {
         timeout: 3000,
-        validateStatus: (status) => status < 500 // Не считать ошибкой 400/401
->>>>>>> 0dfd5e2fa9dcb3741b7d7922dcb3896967a932b1
+        validateStatus: (status) => status === 400 // Ожидаем 400 Bad Request
       });
-      console.log('✅ Server response:', response.status);
+      console.log('✅ Server response: OK (400 expected for empty data)');
       setConnectionError(null);
     } catch (error: any) {
       console.error('❌ Server connection error:', error.message);
+      console.error('❌ Error status:', error.response?.status);
       setConnectionError(`Сервер недоступен: ${error.message}`);
     } finally {
+      // Гарантируем минимальное время показа заставки - 2.5 секунды
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 2500 - elapsed);
+      console.log(`⏳ Elapsed: ${elapsed}ms, Remaining: ${remaining}ms`);
+
       setTimeout(() => {
         console.log('⏳ Loading complete, showing UI');
         setIsLoading(false);
-      }, 2000);
+      }, remaining);
     }
   };
 
@@ -74,20 +116,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/register"
-          element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/"
-          element={isAuthenticated ? <MainPage /> : <Navigate to="/login" />}
-        />
-      </Routes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

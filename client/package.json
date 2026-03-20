@@ -8,13 +8,13 @@
     "build": "tsc && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 80",
     "electron:build": "tsc && vite build && electron-builder",
-    "electron:start": "electron ."
+    "electron:start": "concurrently -k \"npm run dev\" \"wait-on http://localhost:5173 && cross-env DEV=true electron .\""
   },
   "build": {
     "appId": "com.voiceflow.app",
     "productName": "VoiceFlow",
     "directories": {
-      "output": "../builds"
+      "output": "../builds/output"
     },
     "files": [
       "dist/**/*",
@@ -24,7 +24,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -33,14 +35,14 @@
     }
   },
   "dependencies": {
+    "axios": "^1.6.5",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.312.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.3",
-    "zustand": "^4.5.0",
     "socket.io-client": "^4.6.1",
-    "axios": "^1.6.5",
-    "lucide-react": "^0.312.0",
-    "clsx": "^2.1.0"
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
@@ -48,6 +50,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
     "electron": "^28.1.4",
     "electron-builder": "^24.9.1",
     "postcss": "^8.4.33",

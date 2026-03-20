@@ -20,30 +20,42 @@ interface AuthState {
   updateUser: (user: Partial<User>) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   refreshToken: null,
   isAuthenticated: false,
   setAuth: (user, accessToken, refreshToken) => {
-    // Сохраняем в localStorage для сохранения сессии
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('user', JSON.stringify(user));
+    console.log('🔐 setAuth called:', { email: user.email, hasToken: !!accessToken });
     
+    // Сохраняем в localStorage для сохранения сессии
+    try {
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
+      console.log('💾 LocalStorage saved');
+    } catch (e) {
+      console.error('❌ LocalStorage error:', e);
+    }
+
+    // Обновляем состояние
     set({
       user,
       accessToken,
       refreshToken,
       isAuthenticated: true,
     });
+    
+    console.log('✅ Auth state updated:', get().isAuthenticated);
   },
   logout: () => {
+    console.log('🚪 logout called');
+    
     // Очищаем localStorage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    
+
     set({
       user: null,
       accessToken: null,
@@ -65,17 +77,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 if (typeof window !== 'undefined') {
   const token = localStorage.getItem('accessToken');
   const userStr = localStorage.getItem('user');
-  
-  if (token && userStr) {
+  const refreshToken = localStorage.getItem('refreshToken');
+
+  if (token && userStr && refreshToken) {
     try {
       const user = JSON.parse(userStr);
-      useAuthStore.getState().setAuth(
+      // Используем setState напрямую чтобы избежать дублирования
+      useAuthStore.setState({
         user,
-        token,
-        localStorage.getItem('refreshToken') || ''
-      );
+        accessToken: token,
+        refreshToken,
+        isAuthenticated: true,
+      });
     } catch (e) {
       localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     }
   }
 }

@@ -38,7 +38,7 @@ export class MessagesService {
           replyToId: createMessageDto.replyToId,
         },
         include: {
-          author: {
+          user: {
             select: {
               id: true,
               username: true,
@@ -47,7 +47,7 @@ export class MessagesService {
             },
           },
         },
-      });
+      }).then(m => ({ ...m, author: m.user }));
     }
 
     return this.prisma.message.create({
@@ -58,7 +58,7 @@ export class MessagesService {
         replyToId: createMessageDto.replyToId,
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -67,7 +67,7 @@ export class MessagesService {
           },
         },
       },
-    });
+    }).then(m => ({ ...m, author: m.user }));
   }
 
   async update(messageId: string, userId: string, updateMessageDto: UpdateMessageDto) {
@@ -143,7 +143,7 @@ export class MessagesService {
         deletedAt: null,
       },
       include: {
-        author: {
+        user: {
           select: {
             id: true,
             username: true,
@@ -156,6 +156,6 @@ export class MessagesService {
       take: limit,
     });
 
-    return messages;
+    return messages.map(m => ({ ...m, author: m.user }));
   }
 }

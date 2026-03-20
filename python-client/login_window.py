@@ -1,188 +1,180 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from api_client import api
+import json
+import os
 
 class LoginWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
         
-        # Настройки окна
+        # Настройки
         self.title("VoiceFlow - Вход")
-        self.geometry("500x600")
+        self.geometry("500x650")
         self.resizable(False, False)
+        self.center_window()
         
-        # Цветовая тема
+        # Тема
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
         
         # Переменные
-        self.email_var = ctk.StringVar()
-        self.password_var = ctk.StringVar()
         self.is_login_mode = True
         
         # Создание UI
         self.create_widgets()
-        
+    
+    def center_window(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
+    
     def create_widgets(self):
-        """Создать элементы интерфейса"""
-        
         # Заголовок
         self.title_label = ctk.CTkLabel(
             self,
             text="🎤 VoiceFlow",
-            font=ctk.CTkFont(size=36, weight="bold")
+            font=ctk.CTkFont(size=32, weight="bold")
         )
-        self.title_label.pack(pady=40)
+        self.title_label.pack(pady=30)
         
         # Подзаголовок
         self.subtitle_label = ctk.CTkLabel(
             self,
-            text="Вход в аккаунт" if self.is_login_mode else "Регистрация",
-            font=ctk.CTkFont(size=18)
+            text="Вход",
+            font=ctk.CTkFont(size=20)
         )
         self.subtitle_label.pack(pady=10)
         
-        # Фрейм для полей ввода
+        # Фрейм для полей
         self.input_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.input_frame.pack(pady=20, padx=40, fill="x")
         
         # Email
+        self.email_label = ctk.CTkLabel(
+            self.input_frame,
+            text="EMAIL *",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#b9bbbe"
+        )
+        self.email_label.pack(anchor="w")
+        
         self.email_entry = ctk.CTkEntry(
             self.input_frame,
-            textvariable=self.email_var,
-            placeholder_text="Email",
-            height=45,
-            font=ctk.CTkFont(size=16)
+            placeholder_text="test@test.com",
+            height=40,
+            font=ctk.CTkFont(size=14)
         )
-        self.email_entry.pack(pady=10, fill="x")
-        
-        # Username (только для регистрации)
-        self.username_entry = ctk.CTkEntry(
-            self.input_frame,
-            placeholder_text="Имя пользователя",
-            height=45,
-            font=ctk.CTkFont(size=16)
-        )
+        self.email_entry.pack(pady=8, fill="x")
         
         # Password
+        self.password_label = ctk.CTkLabel(
+            self.input_frame,
+            text="ПАРОЛЬ *",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#b9bbbe"
+        )
+        self.password_label.pack(anchor="w")
+        
         self.password_entry = ctk.CTkEntry(
             self.input_frame,
-            textvariable=self.password_var,
-            placeholder_text="Пароль",
-            height=45,
-            font=ctk.CTkFont(size=16),
+            placeholder_text="password123",
+            height=40,
+            font=ctk.CTkFont(size=14),
             show="•"
         )
-        self.password_entry.pack(pady=10, fill="x")
+        self.password_entry.pack(pady=8, fill="x")
         
-        # Кнопка входа/регистрации
+        # Кнопка
         self.action_button = ctk.CTkButton(
             self.input_frame,
-            text="Войти" if self.is_login_mode else "Зарегистрироваться",
-            height=45,
+            text="Войти",
+            height=44,
             font=ctk.CTkFont(size=16, weight="bold"),
+            fg_color="#5865F2",
+            hover_color="#4752C4",
             command=self.on_action
         )
         self.action_button.pack(pady=20, fill="x")
         
-        # Переключатель режим
-        self.toggle_label = ctk.CTkLabel(
-            self.input_frame,
-            text="Нет аккаунта? Зарегистрироваться",
-            font=ctk.CTkFont(size=14),
-            text_color="#5865F2"
-        )
-        self.toggle_label.pack(pady=10)
-        self.toggle_label.bind("<Button-1>", lambda e: self.toggle_mode())
-        
-        # Статус подключения
+        # Статус
         self.status_label = ctk.CTkLabel(
             self,
-            text="🔌 Подключение...",
+            text="✅ Введите данные для входа",
             font=ctk.CTkFont(size=12),
-            text_color="#96989d"
+            text_color="#43b581"
         )
         self.status_label.pack(pady=20)
-        
-        # Проверка подключения
-        self.check_connection()
-        
-    def toggle_mode(self):
-        """Переключить режим вход/регистрация"""
-        self.is_login_mode = not self.is_login_mode
-        
-        if self.is_login_mode:
-            self.subtitle_label.configure(text="Вход в аккаунт")
-            self.action_button.configure(text="Войти")
-            self.toggle_label.configure(text="Нет аккаунта? Зарегистрироваться")
-            self.username_entry.pack_forget()
-        else:
-            self.subtitle_label.configure(text="Регистрация")
-            self.action_button.configure(text="Зарегистрироваться")
-            self.toggle_label.configure(text="Уже есть аккаунт? Войти")
-            self.username_entry.pack(pady=10, fill="x", after=self.email_entry)
-    
-    def check_connection(self):
-        """Проверить подключение к серверу"""
-        try:
-            connected = api.check_connection()
-            if connected:
-                self.status_label.configure(
-                    text="✅ Сервер подключен",
-                    text_color="#23a559"
-                )
-            else:
-                self.status_label.configure(
-                    text="❌ Сервер недоступен",
-                    text_color="#da373c"
-                )
-        except Exception as e:
-            self.status_label.configure(
-                text=f"❌ Ошибка: {str(e)}",
-                text_color="#da373c"
-            )
     
     def on_action(self):
-        """Обработка кнопки вход/регистрация"""
-        email = self.email_var.get()
-        password = self.password_var.get()
+        """Обработка кнопки"""
+        # Получаем данные напрямую из Entry
+        email = self.email_entry.get().strip()
+        password = self.password_entry.get().strip()
         
-        if not email or not password:
-            messagebox.showerror("Ошибка", "Заполните все поля")
+        print(f"\n{'='*50}")
+        print(f"📝 Login attempt:")
+        print(f"   Email: '{email}' (length: {len(email)})")
+        print(f"   Password: '{'*' * len(password)}' (length: {len(password)})")
+        print(f"{'='*50}\n")
+        
+        # Проверка
+        if not email:
+            messagebox.showerror("Ошибка", "❌ Введите EMAIL")
+            self.email_entry.focus()
+            return
+        
+        if not password:
+            messagebox.showerror("Ошибка", "❌ Введите ПАРОЛЬ")
+            self.password_entry.focus()
+            return
+        
+        if '@' not in email:
+            messagebox.showerror("Ошибка", "❌ Email должен содержать '@'")
             return
         
         try:
-            if self.is_login_mode:
-                # Вход
-                result = api.login(email, password)
-                api.set_token(result['accessToken'])
-                
-                messagebox.showinfo("Успех", f"Добро пожаловать, {result['user']['username']}!")
-                self.open_main_window()
-            else:
-                # Регистрация
-                username = self.username_entry.get()
-                if not username:
-                    messagebox.showerror("Ошибка", "Введите имя пользователя")
-                    return
-                
-                result = api.register(email, username, password)
-                api.set_token(result['accessToken'])
-                
-                messagebox.showinfo("Успех", f"Аккаунт создан! Добро пожаловать, {username}!")
-                self.open_main_window()
-                
+            print(f"🔌 Connecting to API...")
+            print(f"📡 Sending login request...")
+            
+            result = api.login(email, password)
+            print(f"✅ Login successful: {result['user']['username']}")
+            
+            api.set_token(result['accessToken'])
+            
+            # Сохраняем email
+            self.save_email(email)
+            
+            messagebox.showinfo("Успех", f"✅ С возвращением, {result['user']['username']}!")
+            self.open_main_window()
+            
         except Exception as e:
             error_msg = str(e)
-            if "400" in error_msg:
-                messagebox.showerror("Ошибка", "Неверный email или пароль")
+            print(f"❌ Error: {error_msg}")
+            
+            if "400" in error_msg or "401" in error_msg:
+                messagebox.showerror("Ошибка", "❌ Неверный email или пароль")
             elif "409" in error_msg:
-                messagebox.showerror("Ошибка", "Пользователь уже существует")
+                messagebox.showerror("Ошибка", "❌ Пользователь уже существует")
+            elif "Connection" in error_msg or "refused" in error_msg.lower():
+                messagebox.showerror("Ошибка", "❌ Не удалось подключиться к серверу")
             else:
-                messagebox.showerror("Ошибка", f"Произошла ошибка: {error_msg}")
+                messagebox.showerror("Ошибка", f"❌ {error_msg}")
+    
+    def save_email(self, email):
+        """Сохранить email"""
+        try:
+            with open("voiceflow_config.json", 'w') as f:
+                json.dump({'email': email}, f)
+            print(f"✅ Saved email: {email}")
+        except Exception as e:
+            print(f"⚠️ Could not save email: {e}")
     
     def open_main_window(self):
-        """Открыть главное окно"""
+        print(f"🚀 Opening main window...")
         self.withdraw()
         from main_window import MainWindow
         main = MainWindow()
@@ -190,13 +182,11 @@ class LoginWindow(ctk.CTk):
         main.mainloop()
     
     def on_close(self, main_window):
-        """Закрытие приложения"""
         main_window.destroy()
         self.destroy()
 
 
 def run_login_window():
-    """Запустить окно входа"""
     app = LoginWindow()
     app.mainloop()
 

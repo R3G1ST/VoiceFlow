@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { useServerStore } from '../stores/serverStore';
 import api from '../services/api';
+import ServerList from '../components/ServerList';
+import ChannelSidebar from '../components/ChannelSidebar';
+import ChatArea from '../components/ChatArea';
+import MemberList from '../components/MemberList';
+import CreateServerModal from '../components/CreateServerModal';
 
 export default function MainPage() {
   const { user, logout } = useAuthStore();
-  const { servers, loadServers } = useServerStore();
+  const { servers, currentServer, loadServers, setCurrentServer } = useServerStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateServer, setShowCreateServer] = useState(false);
 
-  console.log('🔍 MainPage:', { user, serversCount: servers.length, loading, error });
+  console.log('🔍 MainPage:', { user, serversCount: servers.length, currentServer, loading, error });
 
   useEffect(() => {
     checkAuth();
@@ -20,16 +26,36 @@ export default function MainPage() {
       console.log('🔑 Checking auth...');
       const userResponse = await api.get('/users/me');
       console.log('✅ User:', userResponse.data.username);
-      
+
       console.log('📚 Loading servers...');
       await loadServers();
       console.log('✅ Servers loaded:', servers.length);
-      
+
       setLoading(false);
     } catch (err: any) {
       console.error('❌ Error:', err);
-      setError(err.message || 'Ошибка загрузки');
+      const errorMessage = err.response?.status === 401
+        ? 'Неавторизован. Выйдите и войдите снова.'
+        : err.message || 'Ошибка загрузки';
+      setError(errorMessage);
       setLoading(false);
+
+      // Если 401, выходим через 2 секунды
+      if (err.response?.status === 401) {
+        setTimeout(() => logout(), 2000);
+      }
+    }
+  };
+
+  const handleServerClick = async (server: any) => {
+    try {
+      // Загружаем полную информацию о сервере с участниками
+      const response = await api.get(`/servers/${server.id}`);
+      const fullServer = response.data.server;
+      setCurrentServer(fullServer);
+    } catch (err: any) {
+      console.error('❌ Failed to load server details:', err);
+      setCurrentServer(server);
     }
   };
 
@@ -49,33 +75,31 @@ export default function MainPage() {
   console.log('✅ Rendering UI');
 
   return (
-    <div className="h-screen w-screen bg-primary-100 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">
-          ✅ Добро пожаловать в VoiceFlow!
-        </h1>
-        <p className="text-secondary-100 mb-6">
-          Вы вошли как: <strong className="text-white">{user?.username}#{user?.discriminator}</strong>
-        </p>
-        
-        <div className="bg-primary-200 p-6 rounded-lg max-w-md mx-auto">
-          <h2 className="text-xl font-semibold text-white mb-4">📊 Статус:</h2>
-          <p className="text-secondary-100">Серверов: {servers.length}</p>
-          <p className="text-secondary-100">API: Подключено</p>
-          <p className="text-success">Статус: Онлайн</p>
+    <div className="h-screen w-screen flex overflow-hidden">
+      {/* Server List (leftmost) - 72px */}
+      <ServerList 
+        onOpenCreateServer={() => setShowCreateServer(true)}
+        onServerClick={handleServerClick}
+      />
+
+      {/* Channel Sidebar + Chat + Member List */}
+      <div className="flex-1 flex">
+        {/* Channel Sidebar - 240px */}
+        <ChannelSidebar />
+
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <ChatArea />
         </div>
 
-        <button
-          onClick={logout}
-          className="mt-6 btn-discord-secondary"
-        >
-          Выйти
-        </button>
-
-        <p className="text-secondary-400 text-sm mt-8">
-          🎉 VoiceFlow работает!
-        </p>
+        {/* Member List - 240px */}
+        <MemberList />
       </div>
+
+      {/* Create Server Modal */}
+      {showCreateServer && (
+        <CreateServerModal onClose={() => setShowCreateServer(false)} />
+      )}
     </div>
   );
 }
