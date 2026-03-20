@@ -29,13 +29,12 @@ export class ChannelsController {
     return this.channelsService.create(serverId, req.user.id, createChannelDto);
   }
 
-  @Get(':id')
-  findOne(@Request() req, @Param('id') id: string) {
-    return this.channelsService.findOne(id, req.user.id);
-  }
-
   @Patch(':id')
-  update(@Request() req, @Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateChannelDto: UpdateChannelDto,
+  ) {
     return this.channelsService.update(id, req.user.id, updateChannelDto);
   }
 
@@ -44,22 +43,12 @@ export class ChannelsController {
     return this.channelsService.delete(id, req.user.id);
   }
 
-  @Post('servers/:serverId/reorder')
-  reorder(
-    @Request() req,
-    @Param('serverId') serverId: string,
-    @Body() updates: { id: string; position: number; parentId?: string }[],
-  ) {
-    return this.channelsService.reorder(serverId, req.user.id, updates);
-  }
-
   @Get(':id/messages')
   getMessages(
     @Request() req,
     @Param('id') id: string,
-    @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.channelsService.getMessages(id, req.user.id, cursor, limit ? parseInt(limit) : 50);
+    return this.channelsService.getMessages(id, req.user.id, limit ? parseInt(limit) : 50);
   }
 }

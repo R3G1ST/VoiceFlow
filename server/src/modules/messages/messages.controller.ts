@@ -30,28 +30,17 @@ export class MessagesController {
   }
 
   @Patch(':id')
-  update(@Request() req, @Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateMessageDto: UpdateMessageDto,
+  ) {
     return this.messagesService.update(id, req.user.id, updateMessageDto);
   }
 
   @Delete(':id')
   delete(@Request() req, @Param('id') id: string) {
     return this.messagesService.delete(id, req.user.id);
-  }
-
-  @Post(':id/reactions/:emoji')
-  addReaction(@Request() req, @Param('id') id: string, @Param('emoji') emoji: string) {
-    return this.messagesService.addReaction(id, req.user.id, decodeURIComponent(emoji));
-  }
-
-  @Delete(':id/reactions/:emoji')
-  removeReaction(@Request() req, @Param('id') id: string, @Param('emoji') emoji: string) {
-    return this.messagesService.removeReaction(id, req.user.id, decodeURIComponent(emoji));
-  }
-
-  @Get(':id/reactions')
-  getReactions(@Param('id') id: string, @Query('emoji') emoji?: string) {
-    return this.messagesService.getReactions(id, emoji);
   }
 
   @Get('search/:channelId')

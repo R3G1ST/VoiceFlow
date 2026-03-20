@@ -9,13 +9,4 @@ export class CreateServerDto {
   @IsString()
   @IsOptional()
   icon?: string;
-
-  @IsString()
-  @IsOptional()
-  banner?: string;
-
-  @IsString()
-  @IsOptional()
-  @MaxLength(500)
-  description?: string;
 }

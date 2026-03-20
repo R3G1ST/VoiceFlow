@@ -4,13 +4,11 @@ import {
   Patch,
   Body,
   Param,
-  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -20,11 +18,6 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
-  }
-
-  @Get('search')
-  search(@Query('q') query: string, @Query('limit') limit?: string) {
-    return this.usersService.search(query, limit ? parseInt(limit) : 10);
   }
 
   @Get('me')
@@ -38,7 +31,7 @@ export class UsersController {
   }
 
   @Patch('me')
-  update(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(req.user.id, updateUserDto, req.user.id);
+  update(@Request() req, @Body() updateUserDto: any) {
+    return this.usersService.update(req.user.id, req.user.id, updateUserDto);
   }
 }

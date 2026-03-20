@@ -1,21 +1,14 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { FriendshipStatus } from '@prisma/client';
 
 @Injectable()
 export class FriendsService {
   constructor(private prisma: PrismaService) {}
 
   async sendFriendRequest(userId: string, targetUsername: string) {
-    // Find target user by username#discriminator or just username
     let targetUser;
     const parts = targetUsername.split('#');
-    
+
     if (parts.length === 2 && parts[1].length === 4) {
       targetUser = await this.prisma.user.findFirst({
         where: {
@@ -37,7 +30,6 @@ export class FriendsService {
       throw new BadRequestException('Cannot add yourself');
     }
 
-    // Check if already friends or request exists
     const existing = await this.prisma.friendship.findFirst({
       where: {
         OR: [
@@ -48,28 +40,19 @@ export class FriendsService {
     });
 
     if (existing) {
-      if (existing.status === FriendshipStatus.ACCEPTED) {
+      if (existing.status === 'ACCEPTED') {
         throw new BadRequestException('Already friends');
       }
-      if (existing.status === FriendshipStatus.PENDING && existing.userId === userId) {
+      if (existing.status === 'PENDING' && existing.userId === userId) {
         throw new BadRequestException('Request already sent');
       }
-      if (existing.status === FriendshipStatus.BLOCKED) {
-        throw new BadRequestException('Cannot send request');
-      }
-    }
-
-    // Create or update friendship
-    if (existing && existing.status === FriendshipStatus.PENDING) {
-      // Incoming request exists, accept it implicitly
-      return this.acceptFriendRequest(targetUser.id, userId);
     }
 
     const friendship = await this.prisma.friendship.create({
       data: {
         userId,
         friendId: targetUser.id,
-        status: FriendshipStatus.PENDING,
+        status: 'PENDING',
       },
       include: {
         friend: {
@@ -91,7 +74,7 @@ export class FriendsService {
       where: {
         userId: friendId,
         friendId: userId,
-        status: FriendshipStatus.PENDING,
+        status: 'PENDING',
       },
     });
 
@@ -101,10 +84,9 @@ export class FriendsService {
 
     await this.prisma.friendship.update({
       where: { id: friendship.id },
-      data: { status: FriendshipStatus.ACCEPTED },
+      data: { status: 'ACCEPTED' },
     });
 
-    // Create DM channel
     await this.prisma.dmChannel.create({
       data: {
         userId,
@@ -122,7 +104,7 @@ export class FriendsService {
           { userId: friendId, friendId: userId },
           { userId, friendId },
         ],
-        status: FriendshipStatus.PENDING,
+        status: 'PENDING',
       },
     });
 
@@ -150,49 +132,12 @@ export class FriendsService {
     return { success: true };
   }
 
-  async blockUser(userId: string, targetUserId: string) {
-    if (userId === targetUserId) {
-      throw new BadRequestException('Cannot block yourself');
-    }
-
-    await this.prisma.friendship.upsert({
-      where: {
-        userId_friendId: {
-          userId,
-          friendId: targetUserId,
-        },
-      },
-      update: {
-        status: FriendshipStatus.BLOCKED,
-      },
-      create: {
-        userId,
-        friendId: targetUserId,
-        status: FriendshipStatus.BLOCKED,
-      },
-    });
-
-    return { success: true };
-  }
-
-  async unblockUser(userId: string, targetUserId: string) {
-    await this.prisma.friendship.deleteMany({
-      where: {
-        userId,
-        friendId: targetUserId,
-        status: FriendshipStatus.BLOCKED,
-      },
-    });
-
-    return { success: true };
-  }
-
   async getFriends(userId: string) {
     const friendships = await this.prisma.friendship.findMany({
       where: {
         OR: [
-          { userId, status: FriendshipStatus.ACCEPTED },
-          { friendId: userId, status: FriendshipStatus.ACCEPTED },
+          { userId, status: 'ACCEPTED' },
+          { friendId: userId, status: 'ACCEPTED' },
         ],
       },
       include: {
@@ -229,7 +174,7 @@ export class FriendsService {
     const incoming = await this.prisma.friendship.findMany({
       where: {
         friendId: userId,
-        status: FriendshipStatus.PENDING,
+        status: 'PENDING',
       },
       include: {
         user: {
@@ -246,7 +191,7 @@ export class FriendsService {
     const outgoing = await this.prisma.friendship.findMany({
       where: {
         userId,
-        status: FriendshipStatus.PENDING,
+        status: 'PENDING',
       },
       include: {
         friend: {
@@ -313,35 +258,5 @@ export class FriendsService {
       recipient: c.user.id === userId ? c.recipient : c.user,
       lastMessage: c.messages[0] || null,
     }));
-  }
-
-  async getOrCreateDMChannel(userId: string, recipientId: string) {
-    if (userId === recipientId) {
-      throw new BadRequestException('Cannot create DM with yourself');
-    }
-
-    // Check if channel exists
-    let channel = await this.prisma.dmChannel.findFirst({
-      where: {
-        OR: [
-          { userId, recipientId },
-          { userId: recipientId, recipientId: userId },
-        ],
-      },
-    });
-
-    if (channel) {
-      return channel;
-    }
-
-    // Create new channel
-    channel = await this.prisma.dmChannel.create({
-      data: {
-        userId,
-        recipientId,
-      },
-    });
-
-    return channel;
   }
 }

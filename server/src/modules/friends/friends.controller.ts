@@ -36,16 +36,6 @@ export class FriendsController {
     return this.friendsService.removeFriend(req.user.id, friendId);
   }
 
-  @Post('block/:targetUserId')
-  blockUser(@Request() req, @Param('targetUserId') targetUserId: string) {
-    return this.friendsService.blockUser(req.user.id, targetUserId);
-  }
-
-  @Post('unblock/:targetUserId')
-  unblockUser(@Request() req, @Param('targetUserId') targetUserId: string) {
-    return this.friendsService.unblockUser(req.user.id, targetUserId);
-  }
-
   @Get()
   getFriends(@Request() req) {
     return this.friendsService.getFriends(req.user.id);
@@ -59,10 +49,5 @@ export class FriendsController {
   @Get('dm')
   getDMChannels(@Request() req) {
     return this.friendsService.getDMChannels(req.user.id);
-  }
-
-  @Post('dm/:recipientId')
-  getOrCreateDMChannel(@Request() req, @Param('recipientId') recipientId: string) {
-    return this.friendsService.getOrCreateDMChannel(req.user.id, recipientId);
   }
 }
