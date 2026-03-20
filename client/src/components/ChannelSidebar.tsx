@@ -1,8 +1,10 @@
 import { useServerStore } from '../../stores/serverStore';
+import { useAuthStore } from '../../stores/authStore';
 import { Hash, Mic, Plus, Settings } from 'lucide-react';
 
 export default function ChannelSidebar() {
   const { currentServer, currentChannel, setCurrentChannel } = useServerStore();
+  const { user } = useAuthStore();
 
   if (!currentServer) {
     return (
