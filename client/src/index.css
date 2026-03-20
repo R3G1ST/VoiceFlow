@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #313338;
+  color: #dbdee1;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Discord-like input styles */
+.input-discord {
+  @apply bg-primary-200 text-gray-100 rounded px-4 py-2.5 w-full;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
+  @apply transition-all duration-200;
+}
+
+/* Discord-like button styles */
+.btn-discord {
+  @apply bg-primary-500 text-white rounded px-4 py-2.5 font-medium;
+  @apply hover:bg-primary-600 transition-colors duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
+}
+
+.btn-discord-secondary {
+  @apply bg-secondary-500 text-white rounded px-4 py-2.5 font-medium;
+  @apply hover:bg-secondary-400 transition-colors duration-200;
+}
+
+/* Loading screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1b1e 0%, #2b2d31 50%, #1a1b1e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+  box-shadow: 0 8px 32px rgba(88, 101, 242, 0.4);
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.progress-container {
+  width: 100%;
+  max-width: 300px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto 30px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5865F2 0%, #00d4ff 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(88, 101, 242, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(88, 101, 242, 0.8); }
+}
