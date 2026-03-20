@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from './stores/authStore';
 import LoadingScreen from './components/LoadingScreen';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -18,17 +18,20 @@ function App() {
 
   const checkServerConnection = async () => {
     try {
-      await api.get('/health', { timeout: 3000 });
+      // Проверяем доступность API через запрос к login (возвращает 400/401 но не 404)
+      await api.get('/auth/login', { 
+        timeout: 3000,
+        validateStatus: (status) => status < 500 // Не считать ошибкой 400/401
+      });
       setConnectionError(null);
       console.log('✅ Сервер подключен');
     } catch (error: any) {
       console.error('❌ Ошибка подключения к серверу:', error);
-      setConnectionError('Сервер недоступен. Вы всё равно можете войти.');
+      setConnectionError('Сервер недоступен. Попробуйте позже.');
     } finally {
-      // Показываем загрузку 2 секунды и переходим дальше
       setTimeout(() => {
         setIsLoading(false);
-      }, 2000);
+      }, 1500);
     }
   };
 

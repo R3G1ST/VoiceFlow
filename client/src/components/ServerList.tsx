@@ -1,4 +1,4 @@
-import { useServerStore } from '../../stores/serverStore';
+import { useServerStore } from '../stores/serverStore';
 import { Plus } from 'lucide-react';
 
 interface ServerListProps {

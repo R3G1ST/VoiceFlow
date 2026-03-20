@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useAuthStore } from '../../stores/authStore';
-import { useServerStore } from '../../stores/serverStore';
-import api from '../../services/api';
+import { useAuthStore } from '../stores/authStore';
+import { useServerStore } from '../stores/serverStore';
+import api from '../services/api';
 
 interface CreateServerModalProps {
   onClose: () => void;

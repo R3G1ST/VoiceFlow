@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Mic, MicOff, Headphones, PhoneOff, Video, Monitor } from 'lucide-react';
-import { useServerStore } from '../../stores/serverStore';
+import { useServerStore } from '../stores/serverStore';
 
 export default function VoicePanel() {
   const { currentChannel } = useServerStore();

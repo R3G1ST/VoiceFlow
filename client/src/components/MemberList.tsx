@@ -1,4 +1,4 @@
-import { useServerStore } from '../../stores/serverStore';
+import { useServerStore } from '../stores/serverStore';
 
 export default function MemberList() {
   const { currentServer } = useServerStore();

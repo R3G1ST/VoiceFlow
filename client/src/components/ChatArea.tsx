@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useServerStore } from '../../stores/serverStore';
+import { useServerStore } from '../stores/serverStore';
 import { Hash, Gift, Smile, Plus, Search, Phone } from 'lucide-react';
 
 export default function ChatArea() {

@@ -1,5 +1,5 @@
-import { useServerStore } from '../../stores/serverStore';
-import { useAuthStore } from '../../stores/authStore';
+import { useServerStore } from '../stores/serverStore';
+import { useAuthStore } from '../stores/authStore';
 import { Hash, Mic, Plus, Settings } from 'lucide-react';
 
 export default function ChannelSidebar() {
