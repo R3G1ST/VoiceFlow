@@ -98,3 +98,23 @@ body {
   0%, 100% { box-shadow: 0 0 10px rgba(88, 101, 242, 0.5); }
   50% { box-shadow: 0 0 20px rgba(88, 101, 242, 0.8); }
 }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2b2d31;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a1b1e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #111214;
+}

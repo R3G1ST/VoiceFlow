@@ -1,34 +1,42 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useServerStore } from '../stores/serverStore';
 import api from '../services/api';
+import ServerList from '../components/ServerList';
+import ChannelSidebar from '../components/ChannelSidebar';
+import ChatArea from '../components/ChatArea';
+import MemberList from '../components/MemberList';
+import VoicePanel from '../components/VoicePanel';
+import CreateServerModal from '../components/CreateServerModal';
 
 export default function MainPage() {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { servers, currentServer, loadServers } = useServerStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateServer, setShowCreateServer] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
-    console.log('🔍 Checking auth, user:', user?.username);
-    
     try {
-      const response = await api.get('/users/me');
-      console.log('✅ Auth check successful:', response.data);
+      await api.get('/users/me');
+      await loadServers();
       setLoading(false);
     } catch (err: any) {
-      console.error('❌ Auth check failed:', err.response?.status, err.message);
-      setError(err.response?.data?.message || 'Ошибка авторизации');
+      console.error('Auth check failed:', err);
+      setError('Ошибка авторизации');
       setLoading(false);
-      // Не делаем logout сразу - даём пользователю увидеть ошибку
     }
   };
 
   const handleLogout = () => {
-    console.log('🚪 Logging out...');
     logout();
+    navigate('/login');
   };
 
   if (loading) {
@@ -43,45 +51,26 @@ export default function MainPage() {
   }
 
   return (
-    <div className="h-screen w-screen bg-primary-100 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">
-          Добро пожаловать в VoiceFlow!
-        </h1>
-        <p className="text-secondary-100 mb-6">
-          Вы вошли как {user?.username}#{user?.discriminator}
-        </p>
-        
-        {error && (
-          <div className="bg-danger/20 text-danger text-sm p-3 rounded mb-4">
-            ⚠️ {error}
-          </div>
-        )}
-        
-        <div className="space-y-4">
-          <div className="bg-primary-200 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold text-white mb-2">
-              🎉 Сервер работает!
-            </h2>
-            <p className="text-secondary-100">
-              API подключено и готово к работе
-            </p>
-          </div>
+    <div className="h-screen w-screen flex overflow-hidden">
+      {/* Список серверов */}
+      <ServerList onOpenCreateServer={() => setShowCreateServer(true)} />
 
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={handleLogout}
-              className="btn-discord-secondary"
-            >
-              Выйти
-            </button>
-          </div>
-        </div>
+      {/* Боковая панель с каналами */}
+      <ChannelSidebar />
 
-        <p className="text-secondary-300 text-sm mt-8">
-          Дальнейшая разработка клиента в процессе...
-        </p>
-      </div>
+      {/* Основная область чата */}
+      <ChatArea />
+
+      {/* Список участников */}
+      <MemberList />
+
+      {/* Голосовая панель */}
+      <VoicePanel />
+
+      {/* Модальное окно создания сервера */}
+      {showCreateServer && (
+        <CreateServerModal onClose={() => setShowCreateServer(false)} />
+      )}
     </div>
   );
 }
