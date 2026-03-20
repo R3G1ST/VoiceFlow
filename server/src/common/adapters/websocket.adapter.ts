@@ -1,4 +1,3 @@
-import { WebSocketGateway as NestWebSocketGateway } from '@nestjs/websockets';
 import { INestApplication, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IoAdapter } from '@nestjs/platform-socket.io';
@@ -8,24 +7,32 @@ import { createClient } from 'redis';
 export class WebSocketAdapter extends IoAdapter {
   private readonly logger = new Logger(WebSocketAdapter.name);
   private adapterConstructor: ReturnType<typeof createAdapter>;
+  private redisInitialized = false;
 
   constructor(private app: INestApplication, private port: number) {
     super(app);
   }
 
-  async createIOServer(port: number): Promise<any> {
+  async connectToRedis(): Promise<void> {
+    if (this.redisInitialized) {
+      return;
+    }
+    
+    const configService = this.app.get(ConfigService);
+    const redisClient = createClient({
+      url: `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
+      password: configService.get('REDIS_PASSWORD'),
+    });
+
+    await redisClient.connect();
+    this.adapterConstructor = createAdapter(redisClient, redisClient);
+    this.redisInitialized = true;
+    this.logger.log(`Redis adapter initialized`);
+  }
+
+  createIOServer(port: number): any {
     const configService = this.app.get(ConfigService);
     
-    if (port === this.port) {
-      const redisClient = createClient({
-        url: `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
-        password: configService.get('REDIS_PASSWORD'),
-      });
-
-      await redisClient.connect();
-      this.adapterConstructor = createAdapter(redisClient, redisClient);
-    }
-
     const server = super.createIOServer(port, {
       cors: {
         origin: configService.get('CORS_ORIGIN'),

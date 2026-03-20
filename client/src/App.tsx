@@ -23,9 +23,16 @@ function App() {
   const checkServerConnection = async () => {
     console.log('🔗 Checking server connection...');
     try {
+<<<<<<< HEAD
       const response = await api.get('/auth/login', {
         timeout: 5000,
         validateStatus: (status) => status < 500
+=======
+      // Проверяем доступность API через запрос к login (возвращает 400/401 но не 404)
+      await api.get('/auth/login', { 
+        timeout: 3000,
+        validateStatus: (status) => status < 500 // Не считать ошибкой 400/401
+>>>>>>> 0dfd5e2fa9dcb3741b7d7922dcb3896967a932b1
       });
       console.log('✅ Server response:', response.status);
       setConnectionError(null);
